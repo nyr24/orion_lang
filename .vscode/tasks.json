@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "Debug build project",
+			"command": "/usr/sbin/gcc",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"${workspaceFolder}/src/*.c",
+				"-o",
+				"${workspaceFolder}/bin/app.exe",
+				"-O0",
+				"-Wall",
+				"-I${workspaceFolder}/include/"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build",
+			"detail": "compiler: /usr/sbin/gcc"
+		}
+	]
+}
