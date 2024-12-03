@@ -5,6 +5,7 @@ void initChunk(Chunk* chunk) {
     chunk->count = 0;
     chunk->capacity = DEFAULT_CHUNK_CAPACITY;
     chunk->data = (uint8_t*)malloc(sizeof(uint8_t) * DEFAULT_CHUNK_CAPACITY);
+    initValueArr(&chunk->values);
 }
 
 void pushChunkEl(Chunk* chunk, uint8_t new_el) {
@@ -30,9 +31,33 @@ uint8_t popChunkEl(Chunk* chunk) {
     return popped_el;
 }
 
-void printChunk(Chunk* chunk) {
+void disassembleInstruction(Chunk* chunk, uint32_t index) {
+    OpCode instruction = chunk->data[index];
+
+    switch (instruction) {
+        case ADD:
+            printf("ADD\n");
+            break;
+        case SUB:
+            printf("SUB\n");
+            break;
+        case INC:
+            printf("INC\n");
+            break;
+        case RET:
+            printf("RET\n");
+            break;
+        default:
+            printf("Unrecognized instruction %d at index: %u\n", instruction, index);
+            break;
+    }
+}
+
+void disassembleChunk(Chunk* chunk, const char* name) {
+    printf("== %s ==\n", name);
+
     for (int i = 0; i < chunk->count; ++i) {
-        printf("%d ", chunk->data[i]);
+        disassembleInstruction(chunk, i);
     }
     printf("\n");
 }
@@ -41,5 +66,15 @@ void freeChunk(Chunk* chunk) {
     if (chunk->data != NULL) {
         free(chunk->data);
         chunk->data = NULL;
+        freeValueArr(&chunk->values);
     }
+}
+
+void pushValueToChunk(Chunk* chunk, Value value) {
+    pushValueArrEl(&chunk->values, value);
+}
+
+Value pushValueFromChunk(Chunk* chunk) {
+    Value popped_val = popValueArrEl(&chunk->values);
+    return popped_val;
 }
