@@ -35,16 +35,16 @@ void disassembleInstruction(Chunk* chunk, uint32_t index) {
     OpCode instruction = chunk->data[index];
 
     switch (instruction) {
-        case ADD:
+        case OP_ADD:
             printf("ADD\n");
             break;
-        case SUB:
+        case OP_SUB:
             printf("SUB\n");
             break;
-        case INC:
+        case OP_INC:
             printf("INC\n");
             break;
-        case RET:
+        case OP_RET:
             printf("RET\n");
             break;
         default:
