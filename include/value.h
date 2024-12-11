@@ -1,9 +1,7 @@
 #ifndef orion_value_h
 #define orion_value_h
 
-#include <stddef.h>
-#include <stdint.h>
-#include "orion_memory.h"
+#include "common.h"
 
 typedef double Value;
 
