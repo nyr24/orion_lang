@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include "value.h"
+#include "orion_memory.h"
 
 void initValueArr(ValueArr* valueArr) {
     valueArr->count = 0;
