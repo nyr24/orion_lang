@@ -12,9 +12,15 @@ int main(int argc, const char* argv[]) {
     pushChunkEl(&chunk, OP_ADD, line_number++);
     pushChunkEl(&chunk, OP_SUB, line_number++);
 
-    uint8_t valueIndex = pushValueToChunk(&chunk, 1.2);
+    // maybe should be a separate function
+    uint8_t valueIndex = pushConstantToChunk(&chunk, 1.2);
+    // 2 instructions should have the same line number
     pushChunkEl(&chunk, OP_CONSTANT, line_number);
     pushChunkEl(&chunk, valueIndex, line_number++);
+
+    uint8_t valueIndex2 = pushConstantToChunk(&chunk, 2.8);
+    pushChunkEl(&chunk, OP_CONSTANT, line_number);
+    pushChunkEl(&chunk, valueIndex2 , line_number++);
 
     pushChunkEl(&chunk, OP_RET, line_number++);
     
