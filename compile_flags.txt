@@ -1,1 +1,4 @@
 -Iinclude
+-std=c17
+-g
+-m64
