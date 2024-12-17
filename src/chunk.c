@@ -8,10 +8,11 @@ void initChunk(Chunk* chunk) {
     chunk->capacity = DEFAULT_CHUNK_CAPACITY;
     chunk->data = (uint8_t*)malloc(sizeof(uint8_t) * DEFAULT_CHUNK_CAPACITY);
     chunk->lines = (int*)malloc(sizeof(int) * DEFAULT_CHUNK_CAPACITY);
-    initConstantArr(&chunk->constants);
+    initValueArr(&chunk->constants);
 }
 
-void pushChunkEl(Chunk* chunk, uint8_t new_el, int line_number) {
+void pushChunkEl(Chunk* chunk, uint8_t new_el, int* line_number,
+                 bool should_inc_line) {
     if (chunk->count == chunk->capacity) {
         uint32_t old_capacity = chunk->capacity;
         chunk->capacity *= 2;
@@ -22,8 +23,11 @@ void pushChunkEl(Chunk* chunk, uint8_t new_el, int line_number) {
     }
 
     chunk->data[chunk->count] = new_el;
-    chunk->lines[chunk->count] = line_number;
+    chunk->lines[chunk->count] = *line_number;
     chunk->count++;
+    if (should_inc_line) {
+        (*line_number)++;
+    }
 }
 
 uint8_t popChunkEl(Chunk* chunk) {
@@ -43,19 +47,22 @@ void freeChunk(Chunk* chunk) {
     if (chunk->data != NULL) {
         free(chunk->data);
         free(chunk->lines);
-        freeConstantArr(&chunk->constants);
+        freeValueArr(&chunk->constants);
         chunk->data = NULL;
         chunk->lines = NULL;
     }
 }
 
-// returns index, where pushed constant resides in array
-uint8_t pushConstantToChunk(Chunk* chunk, Constant constant) {
-    pushConstantArrEl(&chunk->constants, constant);
-    return chunk->constants.count - 1;
+void pushConstantToChunk(Chunk* chunk, Value constant, int* lineNumber) {
+    pushValueArrEl(&chunk->constants, constant);
+
+    uint8_t index = chunk->constants.count - 1;
+    pushChunkEl(chunk, OP_CONSTANT, lineNumber, false);
+    pushChunkEl(chunk, index, lineNumber, false);
+    // (*lineNumber)++;
 }
 
-Constant popConstantFromChunk(Chunk* chunk) {
-    Constant popped_val = popConstantArrEl(&chunk->constants);
+Value popConstantFromChunk(Chunk* chunk) {
+    Value popped_val = popValueArrEl(&chunk->constants);
     return popped_val;
 }

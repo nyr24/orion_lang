@@ -1,32 +1,27 @@
-#include <stddef.h>
 #include "chunk.h"
 #include "debug.h"
+#include "vm.h"
+#include <stddef.h>
 #include <stdint.h>
 
 int main(int argc, const char* argv[]) {
+    initVM();
+
     Chunk chunk;
     initChunk(&chunk);
 
-    int static line_number = 0;
+    static int lineNumber = 123;
 
-    pushChunkEl(&chunk, OP_ADD, line_number++);
-    pushChunkEl(&chunk, OP_SUB, line_number++);
+    pushConstantToChunk(&chunk, 3.2, &lineNumber);
+    pushChunkEl(&chunk, OP_NEGATE, &lineNumber, false);
+    pushChunkEl(&chunk, OP_RET, &lineNumber, false);
 
-    // maybe should be a separate function
-    uint8_t valueIndex = pushConstantToChunk(&chunk, 1.2);
-    // 2 instructions should have the same line number
-    pushChunkEl(&chunk, OP_CONSTANT, line_number);
-    pushChunkEl(&chunk, valueIndex, line_number++);
+    // disassembleChunk(&chunk, "my chunk");
 
-    uint8_t valueIndex2 = pushConstantToChunk(&chunk, 2.8);
-    pushChunkEl(&chunk, OP_CONSTANT, line_number);
-    pushChunkEl(&chunk, valueIndex2 , line_number++);
-
-    pushChunkEl(&chunk, OP_RET, line_number++);
-    
-    disassembleChunk(&chunk, "my chunk");
+    interpretChunk(&chunk);
 
     freeChunk(&chunk);
-    
+    freeVM();
+
     return 0;
 }
