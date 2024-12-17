@@ -16,7 +16,7 @@ int main(int argc, const char* argv[]) {
     pushChunkEl(&chunk, OP_NEGATE, &lineNumber, false);
     pushChunkEl(&chunk, OP_RET, &lineNumber, false);
 
-    // disassembleChunk(&chunk, "my chunk");
+    disassembleChunk(&chunk, "my chunk");
 
     interpretChunk(&chunk);
 

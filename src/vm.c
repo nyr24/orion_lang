@@ -19,11 +19,6 @@ InterpretResult interpretChunk(Chunk* chunk) {
 }
 
 InterpretResult run() {
-#define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.data[READ_BYTE()])
-
-    disassembleChunk(vm.chunk, "*my chunk*");
-
     for (;;) {
         uint8_t instruction = *vm.ip;
 #ifdef DEBUG_TRACE_EXECUTION
@@ -44,7 +39,8 @@ InterpretResult run() {
             break;
         }
         case OP_CONSTANT_LONG: {
-            Value constant = READ_CONSTANT();
+            Value constant = vm.chunk->constants.data[*vm.ip];
+            vm.ip++;
             printf("%lf (long)\n", constant);
             break;
         }
@@ -54,9 +50,6 @@ InterpretResult run() {
         }
         }
     }
-
-#undef READ_BYTE
-#undef READ_CONSTANT
 }
 
 void freeVM() {}
