@@ -9,9 +9,12 @@ typedef enum {
     OP_CONSTANT,
     OP_CONSTANT_LONG,
     OP_NEGATE,
+    OP_INC,
+    OP_DEC,
     OP_ADD,
     OP_SUB,
-    OP_INC,
+    OP_MULT,
+    OP_DIV
 } OpCode;
 
 typedef struct {
