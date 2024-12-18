@@ -4,13 +4,18 @@
 #include "chunk.h"
 #include "value.h"
 
-#define STACK_MAX 256
+#define STACK_DEF_CAP 256
+
+typedef struct {
+    uint32_t count;
+    uint32_t capacity;
+    Value* data;
+} Stack;
 
 typedef struct {
     Chunk* chunk;
     uint8_t* ip;
-    Value stack[STACK_MAX];
-    Value* stackTop;
+    Stack stack;
 } VM;
 
 typedef enum {
@@ -26,6 +31,7 @@ void freeVM();
 void pushStack(Value value);
 Value popStack();
 Value peekStack();
+Value* peekStackReference();
 bool isStackFull();
 bool isStackEmpty();
 void showStack();

@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include "common.h"
 #include "debug.h"
+#include "orion_memory.h"
 #include "value.h"
 #include "vm.h"
 #include <stdint.h>
@@ -8,9 +9,13 @@
 
 VM vm;
 
-void resetStack() { vm.stackTop = vm.stack; }
+void initStack() {
+    vm.stack.capacity = STACK_DEF_CAP;
+    vm.stack.count = 0;
+    vm.stack.data = malloc(sizeof(Value) * vm.stack.capacity);
+}
 
-void initVM() { resetStack(); }
+void initVM() { initStack(); }
 
 InterpretResult interpretChunk(Chunk* chunk) {
     vm.chunk = chunk;
@@ -53,15 +58,18 @@ InterpretResult run() {
             break;
         }
         case OP_NEGATE: {
-            (*(vm.stackTop - 1)) *= -1;
+            Value* val = peekStackReference();
+            *val *= -1;
             break;
         }
         case OP_INC: {
-            (*(vm.stackTop - 1))++;
+            Value* val = peekStackReference();
+            (*val)++;
             break;
         }
         case OP_DEC: {
-            (*(vm.stackTop - 1))--;
+            Value* val = peekStackReference();
+            (*val)--;
             break;
         }
         case OP_ADD: {
@@ -86,15 +94,21 @@ InterpretResult run() {
 #undef BINARY_OP
 }
 
-void freeVM() {}
+void freeVM() {
+    free(vm.stack.data);
+    vm.stack.data = NULL;
+}
 
 void pushStack(Value value) {
     if (isStackFull()) {
-        return;
+        uint32_t oldCapacity = vm.stack.capacity;
+        vm.stack.capacity *= 2;
+        vm.stack.data =
+            GROW_ARRAY(Value, vm.stack.data, oldCapacity, vm.stack.capacity);
     }
 
-    *vm.stackTop = value;
-    vm.stackTop++;
+    vm.stack.data[vm.stack.count] = value;
+    vm.stack.count++;
 }
 
 Value popStack() {
@@ -102,8 +116,8 @@ Value popStack() {
         return -1;
     }
 
-    vm.stackTop--;
-    return *vm.stackTop;
+    vm.stack.count--;
+    return vm.stack.data[vm.stack.count];
 }
 
 Value peekStack() {
@@ -111,14 +125,17 @@ Value peekStack() {
         return -1;
     }
 
-    return *(vm.stackTop - 1);
+    return vm.stack.data[vm.stack.count - 1];
 }
 
-bool isStackEmpty() { return vm.stackTop == vm.stack; }
-bool isStackFull() { return vm.stackTop == (vm.stack + STACK_MAX + 1); }
+Value* peekStackReference() { return vm.stack.data + (vm.stack.count - 1); }
+
+bool isStackEmpty() { return vm.stack.count == 0; }
+bool isStackFull() { return vm.stack.count == vm.stack.capacity; }
 
 void showStack() {
-    for (Value* slot = vm.stack; slot < vm.stackTop; ++slot) {
+    for (Value* slot = vm.stack.data; slot != (vm.stack.data + vm.stack.count);
+         ++slot) {
         printf("[ ");
         printf("%lf", *slot);
         printf(" ]\n");
