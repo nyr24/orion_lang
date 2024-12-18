@@ -19,6 +19,13 @@ InterpretResult interpretChunk(Chunk* chunk) {
 }
 
 InterpretResult run() {
+#define BINARY_OP(op)                                                          \
+    do {                                                                       \
+        Value b = popStack();                                                  \
+        Value a = popStack();                                                  \
+        pushStack(a op b);                                                     \
+    } while (false)
+
     for (;;) {
         uint8_t instruction = *vm.ip;
 #ifdef DEBUG_TRACE_EXECUTION
@@ -29,7 +36,8 @@ InterpretResult run() {
         vm.ip++;
         switch (instruction) {
         case OP_RET: {
-            printf("%lf\n", popStack());
+            Value ret = popStack();
+            printf("%lf\n", ret);
             return INTERPRET_OK;
         }
         case OP_CONSTANT: {
@@ -45,11 +53,36 @@ InterpretResult run() {
             break;
         }
         case OP_NEGATE: {
-            pushStack(-popStack());
+            (*(vm.stackTop - 1)) *= -1;
+            break;
+        }
+        case OP_INC: {
+            (*(vm.stackTop - 1))++;
+            break;
+        }
+        case OP_DEC: {
+            (*(vm.stackTop - 1))--;
+        }
+        case OP_ADD: {
+            BINARY_OP(+);
+            break;
+        }
+        case OP_SUB: {
+            BINARY_OP(-);
+            break;
+        }
+        case OP_MULT: {
+            BINARY_OP(*);
+            break;
+        }
+        case OP_DIV: {
+            BINARY_OP(/);
             break;
         }
         }
     }
+
+#undef BINARY_OP
 }
 
 void freeVM() {}
