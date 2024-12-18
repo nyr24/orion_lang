@@ -49,7 +49,7 @@ InterpretResult run() {
         case OP_CONSTANT_LONG: {
             Value constant = vm.chunk->constants.data[*vm.ip];
             vm.ip++;
-            printf("%lf (long)\n", constant);
+            pushStack(constant);
             break;
         }
         case OP_NEGATE: {
@@ -62,6 +62,7 @@ InterpretResult run() {
         }
         case OP_DEC: {
             (*(vm.stackTop - 1))--;
+            break;
         }
         case OP_ADD: {
             BINARY_OP(+);

@@ -12,13 +12,23 @@ int main(int argc, const char* argv[]) {
 
     static int lineNumber = 123;
 
-    pushConstantToChunk(&chunk, 5.7, &lineNumber);
-    // pushConstantToChunk(&chunk, 3.2, &lineNumber);
-    // pushChunkEl(&chunk, OP_SUB, &lineNumber, false);
+    pushConstantToChunk(&chunk, 5, &lineNumber);
+    pushConstantToChunk(&chunk, 3, &lineNumber);
+    pushChunkEl(&chunk, OP_MULT, &lineNumber, false);
+
+    pushConstantToChunk(&chunk, 1, &lineNumber);
+    pushConstantToChunk(&chunk, 5, &lineNumber);
+    pushChunkEl(&chunk, OP_MULT, &lineNumber, false);
+
+    pushChunkEl(&chunk, OP_DIV, &lineNumber, false);
+
+    pushChunkEl(&chunk, OP_DEC, &lineNumber, false);
+    pushChunkEl(&chunk, OP_INC, &lineNumber, false);
     pushChunkEl(&chunk, OP_NEGATE, &lineNumber, false);
+
     pushChunkEl(&chunk, OP_RET, &lineNumber, false);
 
-    disassembleChunk(&chunk, "my chunk");
+    // disassembleChunk(&chunk, "my chunk");
 
     interpretChunk(&chunk);
 
