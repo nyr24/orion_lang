@@ -8,32 +8,26 @@ int disassembleInstruction(Chunk* chunk, int offset) {
 
     switch (instruction) {
     case OP_RET:
-        printf("OP_RET\n");
-        return offset + 1;
+        return printSingleByteInstruction("OP_RET", offset);
     case OP_CONSTANT:
-        printf("OP_CONSTANT; value: %lf; offset: %d\n",
-               chunk->constants.data[chunk->data[offset + 1]],
-               chunk->data[offset + 1]);
-        // 2 byte instruction
-        return offset + 2;
+        return printConstantInstruction(chunk, "OP_CONSTANT", offset, false);
     case OP_CONSTANT_LONG:
-        printf("OP_CONSTANT_LONG; value: %lf; offset: %d\n",
-               chunk->constants.data[chunk->data[offset + 1]],
-               chunk->data[offset + 1]);
-        // 4 byte instruction
-        return offset + 4;
+        return printConstantInstruction(chunk, "OP_CONSTANT_LONG", offset,
+                                        true);
     case OP_NEGATE:
-        printf("OP_NEGATE\n");
-        return offset + 1;
-    case OP_ADD:
-        printf("OP_ADD\n");
-        return offset + 1;
-    case OP_SUB:
-        printf("OP_SUB\n");
-        return offset + 1;
+        return printSingleByteInstruction("OP_NEGATE", offset);
     case OP_INC:
-        printf("OP_INC\n");
-        return offset + 1;
+        return printSingleByteInstruction("OP_INC", offset);
+    case OP_DEC:
+        return printSingleByteInstruction("OP_DEC", offset);
+    case OP_ADD:
+        return printSingleByteInstruction("OP_ADD", offset);
+    case OP_SUB:
+        return printSingleByteInstruction("OP_SUB", offset);
+    case OP_MULT:
+        return printSingleByteInstruction("OP_MULT", offset);
+    case OP_DIV:
+        return printSingleByteInstruction("OP_DIV", offset);
     default:
         printf("Unrecognized instruction %d at offset: %d\n", instruction,
                offset);
@@ -48,4 +42,19 @@ void disassembleChunk(Chunk* chunk, const char* name) {
         i = disassembleInstruction(chunk, i);
     }
     printf("\n");
+}
+
+int printSingleByteInstruction(const char* name, int offset) {
+    printf("%s\n", name);
+    return offset + 1;
+}
+
+int printConstantInstruction(Chunk* chunk, const char* name, int offset,
+                             bool is_long) {
+    printf("%s; value: %lf; offset: %d\n", name,
+           chunk->constants.data[chunk->data[offset + 1]],
+           chunk->data[offset + 1]);
+
+    int offset_inc = is_long ? 4 : 2;
+    return offset + offset_inc;
 }
