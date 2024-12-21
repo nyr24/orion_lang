@@ -1,38 +1,24 @@
 #include "chunk.h"
 #include "debug.h"
+#include "scanner.h"
 #include "vm.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, const char* argv[]) {
     initVM();
 
-    Chunk chunk;
-    initChunk(&chunk);
+    if (argc == 1) {
+        repl();
+    } else if (argc == 2) {
+        runFile(argv[1]);
+    } else {
+        fprintf(stderr, "Usage: clox [path]\n");
+        exit(64);
+    }
 
-    static int lineNumber = 123;
-
-    pushConstantToChunk(&chunk, 5, &lineNumber);
-    pushConstantToChunk(&chunk, 3, &lineNumber);
-    pushChunkEl(&chunk, OP_MULT, &lineNumber, false);
-
-    pushConstantToChunk(&chunk, 1, &lineNumber);
-    pushConstantToChunk(&chunk, 5, &lineNumber);
-    pushChunkEl(&chunk, OP_MULT, &lineNumber, false);
-
-    pushChunkEl(&chunk, OP_DIV, &lineNumber, false);
-
-    pushChunkEl(&chunk, OP_DEC, &lineNumber, false);
-    pushChunkEl(&chunk, OP_INC, &lineNumber, false);
-    pushChunkEl(&chunk, OP_NEGATE, &lineNumber, false);
-
-    pushChunkEl(&chunk, OP_RET, &lineNumber, false);
-
-    // disassembleChunk(&chunk, "my chunk");
-
-    interpretChunk(&chunk);
-
-    freeChunk(&chunk);
     freeVM();
 
     return 0;

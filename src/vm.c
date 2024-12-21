@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "common.h"
+#include "compiler.h"
 #include "debug.h"
 #include "orion_memory.h"
 #include "value.h"
@@ -17,10 +18,9 @@ void initStack() {
 
 void initVM() { initStack(); }
 
-InterpretResult interpretChunk(Chunk* chunk) {
-    vm.chunk = chunk;
-    vm.ip = vm.chunk->data;
-    return run();
+InterpretResult interpretChunk(const char* source) {
+    compile(source);
+    return INTERPRET_OK;
 }
 
 InterpretResult run() {

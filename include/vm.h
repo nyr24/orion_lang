@@ -25,7 +25,7 @@ typedef enum {
 } InterpretResult;
 
 void initVM();
-InterpretResult interpretChunk(Chunk* chunk);
+InterpretResult interpretChunk(const char* source);
 InterpretResult run();
 void freeVM();
 void pushStack(Value value);
