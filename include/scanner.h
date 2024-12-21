@@ -33,6 +33,7 @@ typedef enum {
     // Literals.
     TOKEN_IDENTIFIER,
     TOKEN_STRING,
+    TOKEN_INTERPOLATION,
     TOKEN_NUMBER,
     // Keywords.
     TOKEN_AND,
@@ -73,5 +74,17 @@ Token makeToken(TokenType tokenType);
 Token errorToken(const char* message);
 char advance();
 bool match(char expected);
+void skipWhitespaceAndComments();
+char peek();
+char peekNext();
+Token string();
+Token number();
+Token identifier();
+Token interpolation();
+TokenType identifierType();
+TokenType checkKeyword(int offset, int length, const char* rest,
+                       TokenType type);
+bool isDigit(char c);
+bool isAlpha(char c);
 
 #endif
