@@ -14,12 +14,9 @@ void initChunk(Chunk* chunk) {
 void pushChunkEl(Chunk* chunk, uint8_t new_el, int* line_number,
                  bool should_inc_line) {
     if (chunk->count == chunk->capacity) {
-        uint32_t old_capacity = chunk->capacity;
         chunk->capacity *= 2;
-        chunk->data =
-            GROW_ARRAY(uint8_t, chunk->data, old_capacity, chunk->capacity);
-        chunk->lines =
-            GROW_ARRAY(int, chunk->lines, old_capacity, chunk->capacity);
+        chunk->data = GROW_ARRAY(uint8_t, chunk->data, chunk->capacity);
+        chunk->lines = GROW_ARRAY(int, chunk->lines, chunk->capacity);
     }
 
     chunk->data[chunk->count] = new_el;

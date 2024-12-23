@@ -101,10 +101,8 @@ void freeVM() {
 
 void pushStack(Value value) {
     if (isStackFull()) {
-        uint32_t oldCapacity = vm.stack.capacity;
         vm.stack.capacity *= 2;
-        vm.stack.data =
-            GROW_ARRAY(Value, vm.stack.data, oldCapacity, vm.stack.capacity);
+        vm.stack.data = GROW_ARRAY(Value, vm.stack.data, vm.stack.capacity);
     }
 
     vm.stack.data[vm.stack.count] = value;

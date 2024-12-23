@@ -12,10 +12,8 @@ void initValueArr(ValueArr* valueArr) {
 
 void pushValueArrEl(ValueArr* valueArr, Value new_el) {
     if (valueArr->count == valueArr->capacity) {
-        uint32_t old_capacity = valueArr->capacity;
         valueArr->capacity *= 2;
-        valueArr->data =
-            GROW_ARRAY(Value, valueArr->data, old_capacity, valueArr->capacity);
+        valueArr->data = GROW_ARRAY(Value, valueArr->data, valueArr->capacity);
     }
 
     valueArr->data[valueArr->count] = new_el;
