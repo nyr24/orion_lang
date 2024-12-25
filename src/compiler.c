@@ -22,7 +22,7 @@ bool compile(const char* source, Chunk* chunk) {
 void advanceParser() {
     parser.prev = parser.curr;
 
-#ifdef DEBUG_TRACE_EXECUTION
+#ifdef DEBUG
     fprintf(stderr, "advanceParser - unused Loop\n");
     // unused loop, delete after
     // for (;;) {
