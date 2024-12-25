@@ -72,7 +72,7 @@ Token scanToken();
 bool isAtEnd();
 Token makeToken(TokenType tokenType);
 Token errorToken(const char* message);
-char advance();
+char advanceScanner();
 bool match(char expected);
 void skipWhitespaceAndComments();
 char peek();

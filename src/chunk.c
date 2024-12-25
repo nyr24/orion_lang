@@ -12,7 +12,7 @@ void initChunk(Chunk* chunk) {
 }
 
 void pushChunkEl(Chunk* chunk, uint8_t new_el, int* line_number,
-                 bool should_inc_line) {
+                 bool should_increment_line) {
     if (chunk->count == chunk->capacity) {
         chunk->capacity *= 2;
         chunk->data = GROW_ARRAY(uint8_t, chunk->data, chunk->capacity);
@@ -22,7 +22,7 @@ void pushChunkEl(Chunk* chunk, uint8_t new_el, int* line_number,
     chunk->data[chunk->count] = new_el;
     chunk->lines[chunk->count] = *line_number;
     chunk->count++;
-    if (should_inc_line) {
+    if (should_increment_line) {
         (*line_number)++;
     }
 }

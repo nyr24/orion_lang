@@ -19,8 +19,20 @@ void initStack() {
 void initVM() { initStack(); }
 
 InterpretResult interpretChunk(const char* source) {
-    compile(source);
-    return INTERPRET_OK;
+    Chunk chunk;
+    initChunk(&chunk);
+
+    if (!compile(source, &chunk)) {
+        return INTERPRET_COMPILE_ERROR;
+    }
+
+    vm.chunk = &chunk;
+    vm.ip = vm.chunk->data;
+
+    InterpretResult res = run();
+    freeChunk(&chunk);
+
+    return res;
 }
 
 InterpretResult run() {
