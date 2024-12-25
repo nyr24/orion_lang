@@ -1,44 +1,55 @@
+# General
 SRC_DIR = src
 BUILD_DIR = bin
 INCLUDE_DIR = include
-OBJS_NAMES = main.o orion_memory.o debug.o chunk.o value.o vm.o scanner.o compiler.o
-OBJS_WITH_PATH = $(BUILD_DIR)/main.o $(BUILD_DIR)/orion_memory.o $(BUILD_DIR)/debug.o \
-	   $(BUILD_DIR)/chunk.o $(BUILD_DIR)/value.o $(BUILD_DIR)/vm.o \
-	   $(BUILD_DIR)/scanner.o $(BUILD_DIR)/compiler.o
-CFLAGS = -I$(INCLUDE_DIR) -I$(BUILD_DIR) -Wall -std=c17 --debug
 CC = clang
-EXEC_NAME = app
+CFLAGS = -I$(INCLUDE_DIR) -Wall -Werror -Wextra -std=c17
 VPATH = $(SRC_DIR) $(INCLUDE_DIR) $(BUILD_DIR)
+SRCS = main.c orion_memory.c debug.c chunk.c value.c vm.c scanner.c compiler.c
+OBJS = $(SRCS:.c=.o)
+EXE = app
 
+# Debug
+DBG_DIR = $(BUILD_DIR)/debug
+DBG_EXE = $(DBG_DIR)/$(EXE)
+DBG_OBJS = $(addprefix $(DBG_DIR)/,$(OBJS))
+DBG_FLAGS = $(CFLAGS) -g -O0 -DDEBUG
 
-all: $(OBJS_NAMES)
-	$(CC) -o $(BUILD_DIR)/$(EXEC_NAME) $(CFLAGS) $(OBJS_WITH_PATH)
-	echo "Build is ready!"
+# Release
+REL_DIR = $(BUILD_DIR)/release
+REL_EXE = $(REL_DIR)/$(EXE)
+REL_OBJS = $(addprefix $(REL_DIR)/,$(OBJS))
+REL_FLAGS = $(CFLAGS) -O3 -DNDEBUG
 
-main.o: main.c
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/main.o -c $(SRC_DIR)/main.c
+# Targets
 
-orion_memory.o: orion_memory.c orion_memory.h common.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/orion_memory.o -c $(SRC_DIR)/orion_memory.c
+.PHONY: all prep debug release clean
 
-debug.o: debug.c debug.h common.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/debug.o -c $(SRC_DIR)/debug.c
+all: prep debug
 
-chunk.o: chunk.c chunk.h common.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/chunk.o -c $(SRC_DIR)/chunk.c
+# Debug
 
-value.o: value.c value.h common.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/value.o -c $(SRC_DIR)/value.c
+debug: $(DBG_EXE)
 
-vm.o: vm.c vm.h common.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/vm.o -c $(SRC_DIR)/vm.c
+$(DBG_EXE): $(DBG_OBJS)
+	$(CC) $(DBG_FLAGS) -o $@ $^
 
-scanner.o: scanner.c scanner.h vm.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/scanner.o -c $(SRC_DIR)/scanner.c
+$(DBG_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c $(DBG_FLAGS) -o $@ $<
 
-compiler.o: compiler.c compiler.h scanner.h
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/compiler.o -c $(SRC_DIR)/compiler.c
+# Release
+
+release: prep $(REL_EXE)
+
+$(REL_EXE): $(REL_OBJS)
+	$(CC) $(REL_FLAGS) -o $@ $^
+
+$(REL_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) -c $(REL_FLAGS) -o $@ $<
+
+# Util
+prep:
+	mkdir -p $(DBG_DIR) $(REL_DIR)
 
 clean:
-	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/$(EXEC_NAME) $(BUILD_DIR)/*.exe
-	echo "Build dir cleaned up!"
+	rm -f $(REL_OBJS) $(REL_EXE) $(DBG_OBJS) $(DBG_EXE)
