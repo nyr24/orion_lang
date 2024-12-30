@@ -11,12 +11,13 @@ typedef struct {
     Value* data;
 } ValueArr;
 
-#define DEFAULT_VALUE_ARR_CAPACITY 8
+#define DEFAULT_VALUE_ARR_CAPACITY 16
 
 void initValueArr(ValueArr* valueArr);
 void pushValueArrEl(ValueArr* valueArr, Value new_el);
 Value popValueArrEl(ValueArr* valueArr);
 void freeValueArr(ValueArr* valueArr);
 void printValueArr(ValueArr* valueArr);
+bool isValueArrFull(ValueArr* valueArr);
 
 #endif

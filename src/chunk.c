@@ -1,7 +1,9 @@
-#include "chunk.h"
-#include "orion_memory.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "chunk.h"
+#include "orion_memory.h"
+#include "value.h"
 
 void initChunk(Chunk* chunk) {
     chunk->count = 0;
@@ -51,15 +53,19 @@ void freeChunk(Chunk* chunk) {
 }
 
 void pushConstantToChunk(Chunk* chunk, Value constant, int* lineNumber) {
+    if (isValueArrFull(&chunk->constants)) {
+        printf("Too many constants in one chunk \n");
+        return;
+    }
+
     pushValueArrEl(&chunk->constants, constant);
 
     uint8_t index = chunk->constants.count - 1;
     pushChunkEl(chunk, OP_CONSTANT, lineNumber, false);
     pushChunkEl(chunk, index, lineNumber, false);
-    // (*lineNumber)++;
 }
 
 Value popConstantFromChunk(Chunk* chunk) {
-    Value popped_val = popValueArrEl(&chunk->constants);
+  Value popped_val = popValueArrEl(&chunk->constants);
     return popped_val;
 }

@@ -1,8 +1,9 @@
-#include "orion_memory.h"
-#include "value.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "orion_memory.h"
+#include "value.h"
 
 void initValueArr(ValueArr* valueArr) {
     valueArr->count = 0;
@@ -44,4 +45,8 @@ void printValueArr(ValueArr* valueArr) {
         printf("%lf ", valueArr->data[i]);
     }
     printf("\n");
+}
+
+bool isValueArrFull(ValueArr* valueArr) {
+    return (valueArr->count - 1) >= UINT8_MAX;
 }

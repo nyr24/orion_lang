@@ -16,10 +16,10 @@ Token scanToken() {
 
     char c = advanceScanner();
     if (isAlpha(c)) {
-        return identifier();
+        return scanIdentifier();
     }
     if (isDigit(c)) {
-        return number();
+        return scanNumber();
     }
 
     switch (c) {
@@ -54,9 +54,9 @@ Token scanToken() {
         case '>':
             return makeToken(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
         case '"':
-            return string();
+            return scanString();
         case '$':
-            return interpolation();
+            return scanInterpolation();
     }
 
     return errorToken("Unexpected character.");
@@ -192,7 +192,7 @@ char peekNext() {
     return scanner.current[1];
 }
 
-Token string() {
+Token scanString() {
     while (peek() != '"' && !isAtEnd()) {
         char c = advanceScanner();
         if (c == '\n') {
@@ -208,7 +208,7 @@ Token string() {
     return makeToken(TOKEN_STRING);
 }
 
-Token number() {
+Token scanNumber() {
     while (isDigit(peek())) {
         advanceScanner();
     }
@@ -222,7 +222,7 @@ Token number() {
     return makeToken(TOKEN_NUMBER);
 }
 
-Token identifier() {
+Token scanIdentifier() {
     while (isAlpha(peek()) || isDigit(peek())) {
         advanceScanner();
     }
@@ -293,7 +293,7 @@ TokenType checkKeyword(int offset, int length, const char* rest,
     return TOKEN_IDENTIFIER;
 }
 
-Token interpolation() {
+Token scanInterpolation() {
     if (peek() != '{') {
         return errorToken("Unfinished interpolation syntax");
     }

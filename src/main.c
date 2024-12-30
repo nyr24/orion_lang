@@ -1,5 +1,3 @@
-#include "chunk.h"
-#include "debug.h"
 #include "scanner.h"
 #include "vm.h"
 #include <stddef.h>

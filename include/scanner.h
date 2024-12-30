@@ -77,10 +77,10 @@ bool match(char expected);
 void skipWhitespaceAndComments();
 char peek();
 char peekNext();
-Token string();
-Token number();
-Token identifier();
-Token interpolation();
+Token scanString();
+Token scanNumber();
+Token scanIdentifier();
+Token scanInterpolation();
 TokenType identifierType();
 TokenType checkKeyword(int offset, int length, const char* rest,
                        TokenType type);
