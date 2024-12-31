@@ -178,7 +178,10 @@ void skipWhitespaceAndComments() {
                         advanceScanner();
                     }
                 }
-
+                else {
+                    return;
+                }
+                
                 break;
             default:
                 return;

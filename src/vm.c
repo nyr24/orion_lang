@@ -24,6 +24,9 @@ InterpretResult interpretChunk(const char* source) {
     initChunk(&chunk);
 
     if (!compile(source, &chunk)) {
+#ifdef DEBUG
+    printf("Compile error for source: %s\n", source);        
+#endif
         return INTERPRET_COMPILE_ERROR;
     }
 
