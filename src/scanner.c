@@ -217,9 +217,9 @@ Token scanNumber() {
     }
 
     if (peek() == '.' && isDigit(peekNext())) {
-        while (isDigit(peek())) {
+        do {
             advanceScanner();
-        }
+        } while (isDigit(peek()));
     }
 
     return makeToken(TOKEN_NUMBER);
