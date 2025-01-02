@@ -23,11 +23,10 @@ void pushValueArrEl(ValueArr* valueArr, Value new_el) {
 
 Value popValueArrEl(ValueArr* valueArr) {
     if (valueArr->count == 0) {
-        return -1;
+        return NIL_VAL;
     }
 
     Value popped_el = valueArr->data[valueArr->count - 1];
-    valueArr->data[valueArr->count - 1] = 0;
     valueArr->count--;
 
     return popped_el;
@@ -42,7 +41,7 @@ void freeValueArr(ValueArr* valueArr) {
 
 void printValueArr(ValueArr* valueArr) {
     for (int i = 0; i < valueArr->count; ++i) {
-        printf("%lf ", valueArr->data[i]);
+        printf("%lf ", AS_NUMBER(valueArr->data[i]));
     }
     printf("\n");
 }

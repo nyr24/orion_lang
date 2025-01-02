@@ -73,13 +73,17 @@ void repl() {
             break;
         }
 
-        interpretChunk(line);
+        VM vm;
+        initVM(&vm);
+        interpretChunk(&vm, line);
     }
 }
 
 void runFile(const char* path) {
     char* source = readFile(path);
-    InterpretResult result = interpretChunk(source);
+    VM vm;
+    initVM(&vm);
+    InterpretResult result = interpretChunk(&vm, source);
     free(source);
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);

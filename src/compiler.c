@@ -5,6 +5,7 @@
 #include "compiler.h"
 #include "scanner.h"
 #include "debug.h"
+#include "value.h"
 
 Parser parser;
 Chunk* currentChunk;
@@ -90,7 +91,7 @@ void consume(TokenType tokenType, const char* message) {
 
 void number() {
     double value = strtod(parser.prev.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 void emitByte(uint8_t byte) {

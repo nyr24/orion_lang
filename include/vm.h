@@ -24,16 +24,19 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
-void initVM();
-InterpretResult interpretChunk(const char* source);
-InterpretResult run();
-void freeVM();
-void pushStack(Value value);
-Value popStack();
-Value peekStack();
-Value* peekStackReference();
-bool isStackFull();
-bool isStackEmpty();
-void showStack();
+void initVM(VM* vm);
+InterpretResult interpretChunk(VM* vm, const char* source);
+InterpretResult run(VM* vm);
+void freeVM(VM* vm);
+void initStack(Stack* stack);
+void pushStack(Stack* stack, Value value);
+Value popStack(Stack* stack);
+Value peekStack(Stack* stack, int distance);
+Value* peekStackReference(Stack* stack, int distance);
+bool isStackFull(Stack* stack);
+bool isStackEmpty(Stack* stack);
+void showStack(Stack* stack);
+void resetStack(Stack* stack);
+void runtimeError(VM* vm, const char* format, ...);
 
 #endif
