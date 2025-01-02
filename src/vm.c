@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "chunk.h"
 #include "common.h"
@@ -9,17 +10,15 @@
 #include "value.h"
 #include "vm.h"
 
-VM vm;
+void initVM(VM* vm) { initStack(&vm->stack); }
 
-void initStack() {
-    vm.stack.capacity = STACK_DEF_CAP;
-    vm.stack.count = 0;
-    vm.stack.data = malloc(sizeof(Value) * vm.stack.capacity);
+void initStack(Stack* stack) {
+    stack->capacity = STACK_DEF_CAP;
+    stack->count = 0;
+    stack->data = malloc(sizeof(Value) * stack->capacity);
 }
 
-void initVM() { initStack(); }
-
-InterpretResult interpretChunk(const char* source) {
+InterpretResult interpretChunk(VM* vm, const char* source) {
     Chunk chunk;
     initChunk(&chunk);
 
@@ -30,62 +29,70 @@ InterpretResult interpretChunk(const char* source) {
         return INTERPRET_COMPILE_ERROR;
     }
 
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->data;
+    vm->chunk = &chunk;
+    vm->ip = vm->chunk->data;
 
-    InterpretResult res = run();
+    InterpretResult res = run(vm);
     freeChunk(&chunk);
 
     return res;
 }
 
-InterpretResult run() {
+InterpretResult run(VM* vm) {
 #define BINARY_OP(op)         \
     do {                      \
-        Value b = popStack(); \
-        Value a = popStack(); \
-        pushStack(a op b);    \
+        if (!IS_NUMBER(peekStack(&vm->stack, 0)) || !IS_NUMBER(peekStack(&vm->stack, 1))) { \
+            runtimeError(vm, "Operands must be numbers."); \
+            return INTERPRET_RUNTIME_ERROR; \
+        } \
+        double b = AS_NUMBER(popStack(&vm->stack)); \
+        double a = AS_NUMBER(popStack(&vm->stack)); \
+        pushStack(&vm->stack, NUMBER_VAL(a op b));    \
     } while (false)
 
     for (;;) {
-        uint8_t instruction = *vm.ip;
+        uint8_t instruction = *vm->ip;
 #ifdef DEBUG
         showStack();
-        int offset = (int)(vm.ip - vm.chunk->data);
-        disassembleInstruction(vm.chunk, offset);
+        int offset = (int)(vm->ip - vm->chunk->data);
+        disassembleInstruction(vm->chunk, offset);
 #endif
-        vm.ip++;
+        vm->ip++;
         switch (instruction) {
             case OP_RET: {
-                Value ret = popStack();
-                printf("%lf\n", ret);
+                Value ret = popStack(&vm->stack);
+                printf("%lf\n", AS_NUMBER(ret));
                 return INTERPRET_OK;
             }
             case OP_CONSTANT: {
-                Value constant = vm.chunk->constants.data[*vm.ip];
-                vm.ip++;
-                pushStack(constant);
+                Value constant = vm->chunk->constants.data[*vm->ip];
+                vm->ip++;
+                pushStack(&vm->stack, constant);
                 break;
             }
             case OP_CONSTANT_LONG: {
-                Value constant = vm.chunk->constants.data[*vm.ip];
-                vm.ip++;
-                pushStack(constant);
+                Value constant = vm->chunk->constants.data[*vm->ip];
+                vm->ip++;
+                pushStack(&vm->stack, constant);
                 break;
             }
             case OP_NEGATE: {
-                Value* val = peekStackReference();
-                *val *= -1;
+                Value* val = peekStackReference(&vm->stack, 0);
+                AS_NUMBER(*val) *= -1;
                 break;
             }
             case OP_INC: {
-                Value* val = peekStackReference();
-                (*val)++;
+                Value* val = peekStackReference(&vm->stack, 0);
+                if (!IS_NUMBER(*val)) {
+                    runtimeError(vm, "Can't increment a Nan value");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                AS_NUMBER(*val)++;
                 break;
             }
             case OP_DEC: {
-                Value* val = peekStackReference();
-                (*val)--;
+                Value* val = peekStackReference(&vm->stack, 0);
+                AS_NUMBER(*val)--;
                 break;
             }
             case OP_ADD: {
@@ -110,50 +117,69 @@ InterpretResult run() {
 #undef BINARY_OP
 }
 
-void freeVM() {
-    free(vm.stack.data);
-    vm.stack.data = NULL;
+void freeVM(VM* vm) {
+    free(vm->stack.data);
+    vm->stack.data = NULL;
 }
 
-void pushStack(Value value) {
-    if (isStackFull()) {
-        vm.stack.capacity *= 2;
-        vm.stack.data = GROW_ARRAY(Value, vm.stack.data, vm.stack.capacity);
+void pushStack(Stack* stack, Value value) {
+    if (isStackFull(stack)) {
+        stack->capacity *= 2;
+        stack->data = GROW_ARRAY(Value, stack->data, stack->capacity);
     }
 
-    vm.stack.data[vm.stack.count] = value;
-    vm.stack.count++;
+    stack->data[stack->count] = value;
+    stack->count++;
 }
 
-Value popStack() {
-    if (isStackEmpty()) {
-        return -1;
+Value popStack(Stack* stack) {
+    if (isStackEmpty(stack)) {
+        return NUMBER_VAL(-1);
     }
 
-    vm.stack.count--;
-    return vm.stack.data[vm.stack.count];
+    stack->count--;
+    return stack->data[stack->count];
 }
 
-Value peekStack() {
-    if (isStackEmpty()) {
-        return -1;
+Value peekStack(Stack* stack, int distance) {
+    if (isStackEmpty(stack)) {
+        return NUMBER_VAL(-1);
     }
 
-    return vm.stack.data[vm.stack.count - 1];
+    return stack->data[stack->count - 1 - distance];
 }
 
-Value* peekStackReference() { return vm.stack.data + (vm.stack.count - 1); }
+Value* peekStackReference(Stack* stack, int distance) { 
+    return stack->data + (stack->count - 1 - distance);
+}
 
-bool isStackEmpty() { return vm.stack.count == 0; }
-bool isStackFull() { return vm.stack.count == vm.stack.capacity; }
+bool isStackEmpty(Stack* stack) { return stack->count == 0; }
+bool isStackFull(Stack* stack) { return stack->count == stack->capacity; }
 
-void showStack() {
-    for (Value* slot = vm.stack.data; slot != (vm.stack.data + vm.stack.count);
+void showStack(Stack* stack) {
+    for (Value* slot = stack->data; slot != (stack->data + stack->count);
          ++slot) {
         printf("[ ");
-        printf("%lf", *slot);
+        printf("%lf", AS_NUMBER(*slot));
         printf(" ]\n");
     }
 
     printf("\n");
+}
+
+void resetStack(Stack* stack) {
+    stack->count = 0;
+}
+
+void runtimeError(VM* vm, const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+
+    size_t instruction = (vm->ip - vm->chunk->data) - 1;
+    int line = vm->chunk->lines[instruction];
+    fprintf(stderr, "[line %d] in script\n", line);
+    resetStack(&vm->stack);
 }
