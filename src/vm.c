@@ -52,6 +52,13 @@ InterpretResult run(VM* vm) {
         pushStack(&vm->stack, RESULT_VAL(a op b));      \
     } while (false)
 
+#define BINARY_LOGIC_OP(op) \
+    do { \
+        Value b = popStack(&vm->stack); \
+        Value a = popStack(&vm->stack); \
+        pushStack(&vm->stack, BOOL_VAL(toBool(a) op toBool(b))); \
+    } while (false)
+
 #define EQUALITY_OP(op) \
     do { \
         Value b = popStack(&vm->stack); \
@@ -139,7 +146,19 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_NOT: {
-                pushStack(&vm->stack, BOOL_VAL(invertBoolValue(popStack(&vm->stack))));
+                pushStack(&vm->stack, BOOL_VAL(isFalseyValue(popStack(&vm->stack))));
+                break;
+            }
+            case OP_AND: {
+                BINARY_LOGIC_OP(&&);
+                break;
+            }
+            case OP_OR: {
+                BINARY_LOGIC_OP(||);
+                break;
+            }
+            case OP_XOR: {
+                BINARY_LOGIC_OP(^);
                 break;
             }
             case OP_EQUAL: {
@@ -268,6 +287,3 @@ void runtimeError(VM* vm, const char* format, ...) {
     resetStack(&vm->stack);
 }
 
-bool invertBoolValue(Value bool_value) {
-    return IS_NIL(bool_value) || (IS_BOOL(bool_value) && !AS_BOOL(bool_value));
-}

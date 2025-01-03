@@ -50,3 +50,11 @@ void printValueArr(ValueArr* valueArr) {
 bool isValueArrFull(ValueArr* valueArr) {
     return valueArr->count == UINT8_MAX;
 }
+
+bool isFalseyValue(Value value) {
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value)) || (IS_NUMBER(value) && AS_NUMBER(value) == 0);
+}
+
+bool toBool(Value val) {
+    return !isFalseyValue(val);
+}

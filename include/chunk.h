@@ -6,20 +6,26 @@
 
 typedef enum {
     OP_RET,
+    OP_NIL,
     OP_CONSTANT,
+    // bool
     OP_TRUE,
     OP_FALSE,
     OP_NOT,
+    OP_AND,
+    OP_OR,
+    OP_XOR,
     OP_EQUAL,
     OP_NOT_EQUAL,
     OP_GREATER,
     OP_LESS,
     OP_GREATER_EQUAL,
     OP_LESS_EQUAL,
-    OP_NIL,
+    // unary
     OP_NEGATE,
     OP_INC,
     OP_DEC,
+    // binary
     OP_ADD,
     OP_SUB,
     OP_MULT,

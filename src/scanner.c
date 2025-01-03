@@ -277,6 +277,8 @@ TokenType identifierType() {
             break;
         case 'v':
             return checkKeyword(1, 2, "ar", TOKEN_VAR);
+        case 'x':
+            return checkKeyword(1, 2, "or", TOKEN_XOR);
         case 'w':
             return checkKeyword(1, 4, "hile", TOKEN_WHILE);
         default:

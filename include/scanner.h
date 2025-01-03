@@ -36,7 +36,6 @@ typedef enum {
     TOKEN_INTERPOLATION,
     TOKEN_NUMBER,
     // Keywords.
-    TOKEN_AND,
     TOKEN_CLASS,
     TOKEN_ELSE,
     TOKEN_FALSE,
@@ -44,7 +43,9 @@ typedef enum {
     TOKEN_FUN,
     TOKEN_IF,
     TOKEN_NIL,
+    TOKEN_AND,
     TOKEN_OR,
+    TOKEN_XOR,
     TOKEN_PRINT,
     TOKEN_RETURN,
     TOKEN_SUPER,

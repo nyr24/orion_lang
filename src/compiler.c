@@ -34,7 +34,7 @@ ParseRule rules[] = {
     [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
     [TOKEN_STRING]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
-    [TOKEN_AND]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_AND]           = {NULL,     binary, PREC_AND},
     [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FALSE]         = {literal,  NULL,   PREC_NONE},
@@ -42,7 +42,8 @@ ParseRule rules[] = {
     [TOKEN_FUN]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_IF]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NIL]           = {literal,  NULL,   PREC_NONE},
-    [TOKEN_OR]            = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_OR]            = {NULL,     binary, PREC_OR},
+    [TOKEN_XOR]           = {NULL,     binary, PREC_OR},
     [TOKEN_PRINT]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_RETURN]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SUPER]         = {NULL,     NULL,   PREC_NONE},
@@ -144,6 +145,15 @@ void binary() {
             break;
         case TOKEN_SLASH:
             emitByte(OP_DIV);
+            break;
+        case TOKEN_AND:
+            emitByte(OP_AND);
+            break;
+        case TOKEN_OR:
+            emitByte(OP_OR);
+            break;
+        case TOKEN_XOR:
+            emitByte(OP_XOR);
             break;
         case TOKEN_EQUAL_EQUAL:
             emitByte(OP_EQUAL);
