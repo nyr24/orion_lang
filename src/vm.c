@@ -88,7 +88,17 @@ InterpretResult run(VM* vm) {
         switch (instruction) {
             case OP_RET: {
                 Value ret = popStack(&vm->stack);
-                printf("%lf\n", AS_NUMBER(ret));
+                switch (ret.type) {
+                    case VAL_BOOL:
+                        printf("%s\n", AS_BOOL(ret) ? "true" : "false");
+                        break;
+                    case VAL_NIL:
+                        printf("nil\n");
+                        break;
+                    case VAL_NUMBER:
+                        printf("%lf\n", AS_NUMBER(ret));
+                        break;
+                }
                 return INTERPRET_OK;
             }
             case OP_CONSTANT: {
