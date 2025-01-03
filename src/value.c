@@ -1,6 +1,6 @@
-#include <stdint.h>
+#include <common.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
 
 #include "orion_memory.h"
 #include "value.h"
@@ -12,7 +12,10 @@ void initValueArr(ValueArr* valueArr) {
 }
 
 void pushValueArrEl(ValueArr* valueArr, Value new_el) {
+    assert(!isValueArrFull(valueArr) && "ValueArr is full.");
+
     if (valueArr->count == valueArr->capacity) {
+        assert((valueArr->capacity * 2 <= UINT8_MAX) && "ValueArr can't grow more.");
         valueArr->capacity *= 2;
         valueArr->data = GROW_ARRAY(Value, valueArr->data, valueArr->capacity);
     }
@@ -22,9 +25,7 @@ void pushValueArrEl(ValueArr* valueArr, Value new_el) {
 }
 
 Value popValueArrEl(ValueArr* valueArr) {
-    if (valueArr->count == 0) {
-        return NIL_VAL;
-    }
+    assert(valueArr->count > 0 && "valueArr is empty");
 
     Value popped_el = valueArr->data[valueArr->count - 1];
     valueArr->count--;
@@ -47,5 +48,5 @@ void printValueArr(ValueArr* valueArr) {
 }
 
 bool isValueArrFull(ValueArr* valueArr) {
-    return (valueArr->count - 1) >= UINT8_MAX;
+    return valueArr->count == UINT8_MAX;
 }

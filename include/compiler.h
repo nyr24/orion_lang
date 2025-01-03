@@ -45,6 +45,7 @@ void emitConstant(Value value);
 // compiling expressions
 void number();
 void string();
+void literal();
 void expression();
 void unary();
 void binary();

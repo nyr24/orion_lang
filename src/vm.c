@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "chunk.h"
 #include "common.h"
@@ -39,24 +40,50 @@ InterpretResult interpretChunk(VM* vm, const char* source) {
 }
 
 InterpretResult run(VM* vm) {
-#define BINARY_OP(op)         \
+// util macros
+#define BINARY_OP(RESULT_VAL, op)         \
     do {                      \
         if (!IS_NUMBER(peekStack(&vm->stack, 0)) || !IS_NUMBER(peekStack(&vm->stack, 1))) { \
             runtimeError(vm, "Operands must be numbers."); \
-            return INTERPRET_RUNTIME_ERROR; \
-        } \
-        double b = AS_NUMBER(popStack(&vm->stack)); \
-        double a = AS_NUMBER(popStack(&vm->stack)); \
-        pushStack(&vm->stack, NUMBER_VAL(a op b));    \
+            return INTERPRET_RUNTIME_ERROR;             \
+        }                                               \
+        double b = AS_NUMBER(popStack(&vm->stack));     \
+        double a = AS_NUMBER(popStack(&vm->stack));     \
+        pushStack(&vm->stack, RESULT_VAL(a op b));      \
     } while (false)
+
+#define EQUALITY_OP(op) \
+    do { \
+        Value b = popStack(&vm->stack); \
+        Value a = popStack(&vm->stack); \
+        if (a.type != b.type) pushStack(&vm->stack, BOOL_VAL(false)); \
+        else { \
+            switch (a.type) { \
+                case VAL_NIL: pushStack(&vm->stack, BOOL_VAL(true)); break; \
+                case VAL_BOOL: pushStack(&vm->stack, BOOL_VAL(AS_BOOL(a) op AS_BOOL(b))); break; \
+                case VAL_NUMBER: pushStack(&vm->stack, BOOL_VAL(AS_NUMBER(a) op AS_NUMBER(b))); break; \
+                default: pushStack(&vm->stack, BOOL_VAL(false)); break; \
+            } \
+        } \
+    } while (false)
+
+#define THROW_IF_NAN(val)       \
+    do {                        \
+        if (!IS_NUMBER(val)) {  \
+            runtimeError(vm, "Operand must be a number.");  \
+            return INTERPRET_RUNTIME_ERROR;                 \
+        }                       \
+    } while (false)
+// util macros end
 
     for (;;) {
         uint8_t instruction = *vm->ip;
 #ifdef DEBUG
-        showStack();
+        showStack(&vm->stack);
         int offset = (int)(vm->ip - vm->chunk->data);
         disassembleInstruction(vm->chunk, offset);
 #endif
+
         vm->ip++;
         switch (instruction) {
             case OP_RET: {
@@ -66,49 +93,83 @@ InterpretResult run(VM* vm) {
             }
             case OP_CONSTANT: {
                 Value constant = vm->chunk->constants.data[*vm->ip];
+                THROW_IF_NAN(constant);
                 vm->ip++;
                 pushStack(&vm->stack, constant);
                 break;
             }
-            case OP_CONSTANT_LONG: {
-                Value constant = vm->chunk->constants.data[*vm->ip];
-                vm->ip++;
-                pushStack(&vm->stack, constant);
+            case OP_TRUE: {
+                pushStack(&vm->stack, BOOL_VAL(true));
+                break;
+            }
+            case OP_FALSE: {
+                pushStack(&vm->stack, BOOL_VAL(false));
+                break;
+            }
+            case OP_NIL: {
+                pushStack(&vm->stack, NIL_VAL);
                 break;
             }
             case OP_NEGATE: {
                 Value* val = peekStackReference(&vm->stack, 0);
+                THROW_IF_NAN(*val);
                 AS_NUMBER(*val) *= -1;
                 break;
             }
             case OP_INC: {
                 Value* val = peekStackReference(&vm->stack, 0);
-                if (!IS_NUMBER(*val)) {
-                    runtimeError(vm, "Can't increment a Nan value");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
+                THROW_IF_NAN(*val);
                 AS_NUMBER(*val)++;
                 break;
             }
             case OP_DEC: {
                 Value* val = peekStackReference(&vm->stack, 0);
+                THROW_IF_NAN(*val);
                 AS_NUMBER(*val)--;
                 break;
             }
+            case OP_NOT: {
+                pushStack(&vm->stack, BOOL_VAL(invertBoolValue(popStack(&vm->stack))));
+                break;
+            }
+            case OP_EQUAL: {
+                EQUALITY_OP(==);
+                break;
+            }
+            case OP_NOT_EQUAL: {
+                EQUALITY_OP(!=);
+                break;
+            }
+            case OP_GREATER_EQUAL: {
+                BINARY_OP(BOOL_VAL, >);
+                break;
+            }
+            case OP_GREATER: {
+                BINARY_OP(BOOL_VAL, >);
+                break;
+            }
+            case OP_LESS_EQUAL: {
+                BINARY_OP(BOOL_VAL, <=);
+                break;
+            }
+            case OP_LESS: {
+                BINARY_OP(BOOL_VAL, <);
+                break;
+            }
             case OP_ADD: {
-                BINARY_OP(+);
+                BINARY_OP(NUMBER_VAL, +);
                 break;
             }
             case OP_SUB: {
-                BINARY_OP(-);
+                BINARY_OP(NUMBER_VAL, -);
                 break;
             }
             case OP_MULT: {
-                BINARY_OP(*);
+                BINARY_OP(NUMBER_VAL, *);
                 break;
             }
             case OP_DIV: {
-                BINARY_OP(/);
+                BINARY_OP(NUMBER_VAL, /);
                 break;
             }
         }
@@ -133,18 +194,14 @@ void pushStack(Stack* stack, Value value) {
 }
 
 Value popStack(Stack* stack) {
-    if (isStackEmpty(stack)) {
-        return NUMBER_VAL(-1);
-    }
+    assert(!isStackEmpty(stack) && "stack is empty");
 
     stack->count--;
     return stack->data[stack->count];
 }
 
 Value peekStack(Stack* stack, int distance) {
-    if (isStackEmpty(stack)) {
-        return NUMBER_VAL(-1);
-    }
+    assert(!isStackEmpty(stack) && "stack is empty");
 
     return stack->data[stack->count - 1 - distance];
 }
@@ -160,7 +217,24 @@ void showStack(Stack* stack) {
     for (Value* slot = stack->data; slot != (stack->data + stack->count);
          ++slot) {
         printf("[ ");
-        printf("%lf", AS_NUMBER(*slot));
+        switch (slot->type) {
+            case VAL_BOOL:
+                if (AS_BOOL(*slot)) {
+                    printf("true");
+                }
+                else {
+                    printf("false");
+                }
+                break;
+            case VAL_NIL:
+                printf("nil");
+                break;
+            case VAL_NUMBER:
+                printf("%lf", AS_NUMBER(*slot));
+                break;
+            default:
+                printf("unrecognized");
+        }
         printf(" ]\n");
     }
 
@@ -182,4 +256,8 @@ void runtimeError(VM* vm, const char* format, ...) {
     int line = vm->chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script\n", line);
     resetStack(&vm->stack);
+}
+
+bool invertBoolValue(Value bool_value) {
+    return IS_NIL(bool_value) || (IS_BOOL(bool_value) && !AS_BOOL(bool_value));
 }

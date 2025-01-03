@@ -64,8 +64,8 @@ typedef struct {
     int line;
 } Token;
 
-void repl();
-void runFile(const char* path);
+void repl(VM* vm);
+void runFile(VM* vm, const char* path);
 char* readFile(const char* path);
 void initScanner(const char* source);
 Token scanToken();

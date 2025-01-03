@@ -34,7 +34,7 @@ typedef struct {
     Value* data;
 } ValueArr;
 
-#define DEFAULT_VALUE_ARR_CAPACITY 16
+#define DEFAULT_VALUE_ARR_CAPACITY 32
 
 void initValueArr(ValueArr* valueArr);
 void pushValueArrEl(ValueArr* valueArr, Value new_el);

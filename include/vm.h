@@ -38,5 +38,6 @@ bool isStackEmpty(Stack* stack);
 void showStack(Stack* stack);
 void resetStack(Stack* stack);
 void runtimeError(VM* vm, const char* format, ...);
+bool invertBoolValue(Value bool_value);
 
 #endif

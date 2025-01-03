@@ -6,7 +6,6 @@
 int disassembleInstruction(Chunk* chunk, int index);
 void disassembleChunk(Chunk* chunk, const char* name);
 int printSingleByteInstruction(const char* name, int offset);
-int printConstantInstruction(Chunk* chunk, const char* name, int offset,
-                             bool is_long);
+int printConstantInstruction(Chunk* chunk, const char* name, int offset);
 
 #endif

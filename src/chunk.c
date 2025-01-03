@@ -54,7 +54,7 @@ void freeChunk(Chunk* chunk) {
 
 void pushConstantToChunk(Chunk* chunk, Value constant, int* lineNumber) {
     if (isValueArrFull(&chunk->constants)) {
-        printf("Too many constants in one chunk \n");
+        fprintf(stderr, "Too many constants in one chunk\n");
         return;
     }
 
