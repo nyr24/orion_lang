@@ -52,9 +52,22 @@ bool isValueArrFull(ValueArr* valueArr) {
 }
 
 bool isFalseyValue(Value value) {
-    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value)) || (IS_NUMBER(value) && AS_NUMBER(value) == 0);
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value))
+        || (IS_NUMBER(value) && AS_NUMBER(value) == 0);
 }
 
 bool toBool(Value val) {
     return !isFalseyValue(val);
+}
+
+bool areValuesEqual(Value a, Value b) {
+    if (a.type != b.type) {
+        return false;
+    }
+
+    switch (a.type) {
+        case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_NIL: return true;
+    }
 }

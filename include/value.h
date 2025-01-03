@@ -42,6 +42,7 @@ Value popValueArrEl(ValueArr* valueArr);
 void freeValueArr(ValueArr* valueArr);
 void printValueArr(ValueArr* valueArr);
 bool isValueArrFull(ValueArr* valueArr);
+bool areValuesEqual(Value a, Value b);
 bool isFalseyValue(Value val);
 bool toBool(Value val);
 

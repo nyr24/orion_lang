@@ -59,21 +59,6 @@ InterpretResult run(VM* vm) {
         pushStack(&vm->stack, BOOL_VAL(toBool(a) op toBool(b))); \
     } while (false)
 
-#define EQUALITY_OP(op) \
-    do { \
-        Value b = popStack(&vm->stack); \
-        Value a = popStack(&vm->stack); \
-        if (a.type != b.type) pushStack(&vm->stack, BOOL_VAL(false)); \
-        else { \
-            switch (a.type) { \
-                case VAL_NIL: pushStack(&vm->stack, BOOL_VAL(true)); break; \
-                case VAL_BOOL: pushStack(&vm->stack, BOOL_VAL(AS_BOOL(a) op AS_BOOL(b))); break; \
-                case VAL_NUMBER: pushStack(&vm->stack, BOOL_VAL(AS_NUMBER(a) op AS_NUMBER(b))); break; \
-                default: pushStack(&vm->stack, BOOL_VAL(false)); break; \
-            } \
-        } \
-    } while (false)
-
 #define THROW_IF_NAN(val)       \
     do {                        \
         if (!IS_NUMBER(val)) {  \
@@ -162,11 +147,15 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_EQUAL: {
-                EQUALITY_OP(==);
+                Value b = popStack(&vm->stack);
+                Value a = popStack(&vm->stack);
+                pushStack(&vm->stack, BOOL_VAL(areValuesEqual(a, b)));
                 break;
             }
             case OP_NOT_EQUAL: {
-                EQUALITY_OP(!=);
+                Value b = popStack(&vm->stack);
+                Value a = popStack(&vm->stack);
+                pushStack(&vm->stack, BOOL_VAL(!areValuesEqual(a, b)));
                 break;
             }
             case OP_GREATER_EQUAL: {
