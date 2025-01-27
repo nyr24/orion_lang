@@ -4,6 +4,7 @@
 
 #include "orion_memory.h"
 #include "value.h"
+#include "object.h"
 
 void initValueArr(ValueArr* valueArr) {
     valueArr->count = 0;
@@ -42,9 +43,32 @@ void freeValueArr(ValueArr* valueArr) {
 
 void printValueArr(ValueArr* valueArr) {
     for (int i = 0; i < valueArr->count; ++i) {
-        printf("%lf ", AS_NUMBER(valueArr->data[i]));
+        switch (valueArr->data[i].type) {
+            case VAL_NUMBER:
+                printf("%lf\n", AS_NUMBER(valueArr->data[i]));
+                break;
+            case VAL_BOOL:
+                printf("%s\n", AS_BOOL(valueArr->data[i]) ? "true" : "false");
+                break;
+            case VAL_NIL:
+                printf("%s\n", "nil");
+                break;
+            case VAL_OBJ:
+                printObject(valueArr->data[i]);
+                break;
+        }
     }
-    printf("\n");
+}
+
+void printObject(Value value) {
+    switch (AS_OBJ(value)->type) {
+        case OBJ_STRING:
+            printf("%s\n", AS_CSTRING(value));
+            break;
+        case OBJ_INSTANCE:
+            // TODO:
+            break;
+    }
 }
 
 bool isValueArrFull(ValueArr* valueArr) {
@@ -68,6 +92,12 @@ bool areValuesEqual(Value a, Value b) {
     switch (a.type) {
         case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
         case VAL_BOOL: return AS_BOOL(a) == AS_BOOL(b);
+        case VAL_OBJ: {
+            ObjString* string1 = AS_STRING(a);
+            ObjString* string2 = AS_STRING(b);
+            return  string1->length == string2->length &&
+                    memcmp(string1->data, string2->data, string1->length) == 0;
+        }
         case VAL_NIL: return true;
     }
 }

@@ -7,6 +7,7 @@
 #include "scanner.h"
 #include "debug.h"
 #include "value.h"
+#include "object.h"
 
 Parser parser;
 Chunk* currentChunk;
@@ -32,7 +33,7 @@ ParseRule rules[] = {
     [TOKEN_LESS]          = {NULL,     binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL]    = {NULL,     binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER]    = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_STRING]        = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_STRING]        = {string,   NULL,   PREC_NONE},
     [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
     [TOKEN_AND]           = {NULL,     binary, PREC_AND},
     [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
@@ -94,6 +95,10 @@ void consume(TokenType tokenType, const char* message) {
 void number() {
     double value = strtod(parser.prev.start, NULL);
     emitConstant(NUMBER_VAL(value));
+}
+
+void string() {
+    emitConstant(OBJ_VAL(copyString(parser.prev.start + 1, parser.prev.length - 2)));
 }
 
 void literal() {
