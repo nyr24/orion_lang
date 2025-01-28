@@ -6,12 +6,17 @@
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
-#include "debug.h"
+#include "object.h"
 #include "orion_memory.h"
 #include "value.h"
 #include "vm.h"
+#ifdef DEBUG
+#include "debug.h"
+#endif
 
-void initVM(VM* vm) { initStack(&vm->stack); }
+VM vm;
+
+void initVM() { initStack(&vm.stack); }
 
 void initStack(Stack* stack) {
     stack->capacity = STACK_DEF_CAP;
@@ -19,7 +24,7 @@ void initStack(Stack* stack) {
     stack->data = malloc(sizeof(Value) * stack->capacity);
 }
 
-InterpretResult interpretChunk(VM* vm, const char* source) {
+InterpretResult interpretChunk(const char* source) {
     Chunk chunk;
     initChunk(&chunk);
 
@@ -30,56 +35,54 @@ InterpretResult interpretChunk(VM* vm, const char* source) {
         return INTERPRET_COMPILE_ERROR;
     }
 
-    vm->chunk = &chunk;
-    vm->ip = vm->chunk->data;
+    vm.chunk = &chunk;
+    vm.ip = vm.chunk->data;
 
-    InterpretResult res = run(vm);
+    InterpretResult res = run();
     freeChunk(&chunk);
 
     return res;
 }
 
-InterpretResult run(VM* vm) {
+InterpretResult run() {
 // util macros
-#define BINARY_OP(RESULT_VAL, op)         \
-    do {                      \
-        if (!IS_NUMBER(peekStack(&vm->stack, 0)) || !IS_NUMBER(peekStack(&vm->stack, 1))) { \
-            runtimeError(vm, "Operands must be numbers."); \
+#define BINARY_OP(RESULT_VAL, op)   \
+    do {    \
+        if (!IS_NUMBER(peekStack(&vm.stack, 0)) || !IS_NUMBER(peekStack(&vm.stack, 1))) { \
+            runtimeError("Operands must be numbers.");  \
             return INTERPRET_RUNTIME_ERROR;             \
         }                                               \
-        double b = AS_NUMBER(popStack(&vm->stack));     \
-        double a = AS_NUMBER(popStack(&vm->stack));     \
-        pushStack(&vm->stack, RESULT_VAL(a op b));      \
+        double b = AS_NUMBER(popStack(&vm.stack));     \
+        double a = AS_NUMBER(popStack(&vm.stack));     \
+        pushStack(&vm.stack, RESULT_VAL(a op b));       \
     } while (false)
 
 #define BINARY_LOGIC_OP(op) \
     do { \
-        Value b = popStack(&vm->stack); \
-        Value a = popStack(&vm->stack); \
-        pushStack(&vm->stack, BOOL_VAL(toBool(a) op toBool(b))); \
+        Value b = popStack(&vm.stack); \
+        Value a = popStack(&vm.stack); \
+        pushStack(&vm.stack, BOOL_VAL(toBool(a) op toBool(b))); \
     } while (false)
 
 #define THROW_IF_NAN(val)       \
     do {                        \
         if (!IS_NUMBER(val)) {  \
-            runtimeError(vm, "Operand must be a number.");  \
+            runtimeError("Operand must be a number.");      \
             return INTERPRET_RUNTIME_ERROR;                 \
         }                       \
     } while (false)
 // util macros end
-
     for (;;) {
-        uint8_t instruction = *vm->ip;
+        uint8_t instruction = *(vm.ip);
 #ifdef DEBUG
-        showStack(&vm->stack);
-        int offset = (int)(vm->ip - vm->chunk->data);
-        disassembleInstruction(vm->chunk, offset);
+        showStack(&vm.stack);
+        int offset = (int)(vm.ip - vm.chunk.data);
+        disassembleInstruction(vm.chunk, offset);
 #endif
-
-        vm->ip++;
+        vm.ip++;
         switch (instruction) {
             case OP_RET: {
-                Value ret = popStack(&vm->stack);
+                Value ret = popStack(&vm.stack);
                 switch (ret.type) {
                     case VAL_BOOL:
                         printf("%s\n", AS_BOOL(ret) ? "true" : "false");
@@ -94,44 +97,44 @@ InterpretResult run(VM* vm) {
                 return INTERPRET_OK;
             }
             case OP_CONSTANT: {
-                Value constant = vm->chunk->constants.data[*vm->ip];
+                Value constant = vm.chunk->constants.data[*vm.ip];
                 THROW_IF_NAN(constant);
-                vm->ip++;
-                pushStack(&vm->stack, constant);
+                vm.ip++;
+                pushStack(&vm.stack, constant);
                 break;
             }
             case OP_TRUE: {
-                pushStack(&vm->stack, BOOL_VAL(true));
+                pushStack(&vm.stack, BOOL_VAL(true));
                 break;
             }
             case OP_FALSE: {
-                pushStack(&vm->stack, BOOL_VAL(false));
+                pushStack(&vm.stack, BOOL_VAL(false));
                 break;
             }
             case OP_NIL: {
-                pushStack(&vm->stack, NIL_VAL);
+                pushStack(&vm.stack, NIL_VAL);
                 break;
             }
             case OP_NEGATE: {
-                Value* val = peekStackReference(&vm->stack, 0);
+                Value* val = peekStackReference(&vm.stack, 0);
                 THROW_IF_NAN(*val);
                 AS_NUMBER(*val) *= -1;
                 break;
             }
             case OP_INC: {
-                Value* val = peekStackReference(&vm->stack, 0);
+                Value* val = peekStackReference(&vm.stack, 0);
                 THROW_IF_NAN(*val);
                 AS_NUMBER(*val)++;
                 break;
             }
             case OP_DEC: {
-                Value* val = peekStackReference(&vm->stack, 0);
+                Value* val = peekStackReference(&vm.stack, 0);
                 THROW_IF_NAN(*val);
                 AS_NUMBER(*val)--;
                 break;
             }
             case OP_NOT: {
-                pushStack(&vm->stack, BOOL_VAL(isFalseyValue(popStack(&vm->stack))));
+                pushStack(&vm.stack, BOOL_VAL(isFalseyValue(popStack(&vm.stack))));
                 break;
             }
             case OP_AND: {
@@ -147,15 +150,15 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_EQUAL: {
-                Value b = popStack(&vm->stack);
-                Value a = popStack(&vm->stack);
-                pushStack(&vm->stack, BOOL_VAL(areValuesEqual(a, b)));
+                Value b = popStack(&vm.stack);
+                Value a = popStack(&vm.stack);
+                pushStack(&vm.stack, BOOL_VAL(areValuesEqual(a, b)));
                 break;
             }
             case OP_NOT_EQUAL: {
-                Value b = popStack(&vm->stack);
-                Value a = popStack(&vm->stack);
-                pushStack(&vm->stack, BOOL_VAL(!areValuesEqual(a, b)));
+                Value b = popStack(&vm.stack);
+                Value a = popStack(&vm.stack);
+                pushStack(&vm.stack, BOOL_VAL(!areValuesEqual(a, b)));
                 break;
             }
             case OP_GREATER_EQUAL: {
@@ -175,7 +178,17 @@ InterpretResult run(VM* vm) {
                 break;
             }
             case OP_ADD: {
-                BINARY_OP(NUMBER_VAL, +);
+                if (IS_STRING(peekStack(&vm.stack, 0)) && IS_STRING(peekStack(&vm.stack, 1))) {
+                    ObjString* result = concatStrings(AS_STRING(popStack(&vm.stack)), AS_STRING(popStack(&vm.stack)));
+                    pushStack(&vm.stack, OBJ_VAL(result));
+                }
+                else if (IS_NUMBER(peekStack(&vm.stack, 0)) && IS_NUMBER(peekStack(&vm.stack, 1))) {
+                    BINARY_OP(NUMBER_VAL, +);
+                }
+                else {
+                    runtimeError("operands must be either numbers or strings\n");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 break;
             }
             case OP_SUB: {
@@ -190,15 +203,15 @@ InterpretResult run(VM* vm) {
                 BINARY_OP(NUMBER_VAL, /);
                 break;
             }
+            }
         }
-    }
 
 #undef BINARY_OP
 }
 
-void freeVM(VM* vm) {
-    free(vm->stack.data);
-    vm->stack.data = NULL;
+void freeVM() {
+    free(vm.stack.data);
+    vm.stack.data = NULL;
 }
 
 void pushStack(Stack* stack, Value value) {
@@ -263,16 +276,16 @@ void resetStack(Stack* stack) {
     stack->count = 0;
 }
 
-void runtimeError(VM* vm, const char* format, ...) {
+void runtimeError(const char* format, ...) {
     va_list args;
     va_start(args, format);
     vfprintf(stderr, format, args);
     va_end(args);
     fputc('\n', stderr);
 
-    size_t instruction = (vm->ip - vm->chunk->data) - 1;
-    int line = vm->chunk->lines[instruction];
+    size_t instruction = (vm.ip - vm.chunk->data) - 1;
+    int line = vm.chunk->lines[instruction];
     fprintf(stderr, "[line %d] in script\n", line);
-    resetStack(&vm->stack);
+    resetStack(&vm.stack);
 }
 
