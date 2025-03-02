@@ -1,7 +1,8 @@
+#include <stdio.h>
 #include "chunk.h"
 #include "value.h"
 #include "debug.h"
-#include <stdio.h>
+#include "object.h"
 
 int disassembleInstruction(Chunk* chunk, int offset) {
     printf("%04d ", offset);
@@ -68,7 +69,26 @@ int printSingleByteInstruction(const char* name, int offset) {
 int printConstantInstruction(Chunk* chunk, const char* name, int offset) {
     Value val = chunk->constants.data[chunk->data[offset + 1]];
 
-    printf("%s; value: %lf; offset: %d\n", name, AS_NUMBER(val), chunk->data[offset + 1]);
+    switch (val.type) {
+        case VAL_NUMBER: {
+            printf("%s; value: %lf; index: %d\n", name, AS_NUMBER(val), chunk->data[offset + 1]);
+            break;
+        }
+        case VAL_NIL: {
+            printf("%s; value: nil\n", name);
+            break;
+        }
+        case VAL_BOOL: {
+            printf("%s; value: %s\n", name, AS_BOOL(val) ? "true" : "false");
+            break;
+        }
+        case VAL_OBJ: {
+            if (IS_STRING(val)) {
+                printf("%s; value: %s\n", name, AS_CSTRING(val));
+            }
+            break;
+        }
+    }
 
     return offset + 2;
 }

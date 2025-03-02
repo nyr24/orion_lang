@@ -7,15 +7,17 @@
 #define STACK_DEF_CAP 256
 
 typedef struct {
-    uint32_t count;
-    uint32_t capacity;
-    Value* data;
+    Value*      data;
+    uint32_t    count;
+    uint32_t    capacity;
 } Stack;
 
 typedef struct {
-    Chunk* chunk;
-    uint8_t* ip;
-    Stack stack;
+    Stack       stack;
+    Chunk*      chunk;
+    uint8_t*    ip;
+    // linked list of allocated objects
+    Obj*        objects;
 } VM;
 
 typedef enum {
@@ -24,10 +26,11 @@ typedef enum {
     INTERPRET_RUNTIME_ERROR
 } InterpretResult;
 
-void initVM(VM* vm);
-InterpretResult interpretChunk(VM* vm, const char* source);
-InterpretResult run(VM* vm);
-void freeVM(VM* vm);
+void initVM();
+InterpretResult interpretChunk(const char* source);
+InterpretResult run();
+void freeVM();
+void freeObjects();
 void initStack(Stack* stack);
 void pushStack(Stack* stack, Value value);
 Value popStack(Stack* stack);
@@ -37,6 +40,8 @@ bool isStackFull(Stack* stack);
 bool isStackEmpty(Stack* stack);
 void showStack(Stack* stack);
 void resetStack(Stack* stack);
-void runtimeError(VM* vm, const char* format, ...);
+void runtimeError(const char* format, ...);
+
+extern VM vm;
 
 #endif

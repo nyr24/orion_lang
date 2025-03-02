@@ -6,19 +6,18 @@
 #include <stdlib.h>
 
 int main(int argc, const char* argv[]) {
-    VM vm;
-    initVM(&vm);
+    initVM();
 
     if (argc == 1) {
-        repl(&vm);
+        repl();
     } else if (argc == 2) {
-        runFile(&vm, argv[1]);
+        runFile(argv[1]);
     } else {
-        fprintf(stderr, "Usage: clox [path]\n");
+        fprintf(stderr, "Usage: orion [path]\n");
         exit(64);
     }
 
-    freeVM(&vm);
+    freeVM();
 
     return 0;
 }

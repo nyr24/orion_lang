@@ -1,6 +1,7 @@
 #include <common.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "orion_memory.h"
 #include "value.h"

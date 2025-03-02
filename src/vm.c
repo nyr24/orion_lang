@@ -2,14 +2,17 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
 #include "object.h"
+#include "orion_string.h"
 #include "orion_memory.h"
 #include "value.h"
 #include "vm.h"
+
 #ifdef DEBUG
 #include "debug.h"
 #endif
@@ -76,7 +79,7 @@ InterpretResult run() {
         uint8_t instruction = *(vm.ip);
 #ifdef DEBUG
         showStack(&vm.stack);
-        int offset = (int)(vm.ip - vm.chunk.data);
+        int offset = (int)(vm.ip - vm.chunk->data);
         disassembleInstruction(vm.chunk, offset);
 #endif
         vm.ip++;
@@ -93,12 +96,15 @@ InterpretResult run() {
                     case VAL_NUMBER:
                         printf("%lf\n", AS_NUMBER(ret));
                         break;
+                    case VAL_OBJ:
+                        // TODO: temp code
+                        printf("object\n");
+                        break;
                 }
                 return INTERPRET_OK;
             }
             case OP_CONSTANT: {
                 Value constant = vm.chunk->constants.data[*vm.ip];
-                THROW_IF_NAN(constant);
                 vm.ip++;
                 pushStack(&vm.stack, constant);
                 break;
@@ -179,7 +185,7 @@ InterpretResult run() {
             }
             case OP_ADD: {
                 if (IS_STRING(peekStack(&vm.stack, 0)) && IS_STRING(peekStack(&vm.stack, 1))) {
-                    ObjString* result = concatStrings(AS_STRING(popStack(&vm.stack)), AS_STRING(popStack(&vm.stack)));
+                    ObjString* result = strConcat(AS_STRING(popStack(&vm.stack)), AS_STRING(popStack(&vm.stack)));
                     pushStack(&vm.stack, OBJ_VAL(result));
                 }
                 else if (IS_NUMBER(peekStack(&vm.stack, 0)) && IS_NUMBER(peekStack(&vm.stack, 1))) {
@@ -212,6 +218,30 @@ InterpretResult run() {
 void freeVM() {
     free(vm.stack.data);
     vm.stack.data = NULL;
+
+    freeObjects();
+}
+
+void freeObjects() {
+    Obj* curr = vm.objects;
+    Obj* next;
+
+    while (curr != NULL) {
+        next = curr->next;
+        switch (curr->type) {
+            case OBJ_STRING: {
+                ObjString* str = (ObjString*)curr;
+                strFree(str);
+                break;
+            }
+            case OBJ_INSTANCE: {
+                // TODO: temporary code
+                free(curr);
+                break;
+            }
+        }
+        curr = next;
+    }
 }
 
 void pushStack(Stack* stack, Value value) {
@@ -245,8 +275,7 @@ bool isStackEmpty(Stack* stack) { return stack->count == 0; }
 bool isStackFull(Stack* stack) { return stack->count == stack->capacity; }
 
 void showStack(Stack* stack) {
-    for (Value* slot = stack->data; slot != (stack->data + stack->count);
-         ++slot) {
+    for (Value* slot = stack->data; slot != (stack->data + stack->count); ++slot) {
         printf("[ ");
         switch (slot->type) {
             case VAL_BOOL:
@@ -262,6 +291,11 @@ void showStack(Stack* stack) {
                 break;
             case VAL_NUMBER:
                 printf("%lf", AS_NUMBER(*slot));
+                break;
+            case VAL_OBJ:
+                if (IS_STRING(*slot)) {
+                    printf("%s", AS_CSTRING(*slot));
+                }
                 break;
             default:
                 printf("unrecognized");

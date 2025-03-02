@@ -62,7 +62,7 @@ Token scanToken() {
     return errorToken("Unexpected character.");
 }
 
-void repl(VM* vm) {
+void repl() {
     char line[1024];
 
     for (;;) {
@@ -73,13 +73,13 @@ void repl(VM* vm) {
             break;
         }
 
-        interpretChunk(vm, line);
+        interpretChunk(line);
     }
 }
 
-void runFile(VM* vm, const char* path) {
+void runFile(const char* path) {
     char* source = readFile(path);
-    InterpretResult result = interpretChunk(vm, source);
+    InterpretResult result = interpretChunk(source);
     free(source);
 
     if (result == INTERPRET_COMPILE_ERROR) exit(65);
