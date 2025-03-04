@@ -4,6 +4,7 @@
 
 #include "chunk.h"
 #include "compiler.h"
+#include "orion_string.h"
 #include "scanner.h"
 #include "debug.h"
 #include "value.h"
@@ -97,8 +98,10 @@ void number() {
     emitConstant(NUMBER_VAL(value));
 }
 
+// +1   -   Token initialization should start without leading quote
+// -2   -   length of parsed string should be without 2 quotes on each side
 void string() {
-    emitConstant(OBJ_VAL(copyString(parser.prev.start + 1, parser.prev.length - 2)));
+    emitConstant(OBJ_VAL(strNew(parser.prev.start + 1, parser.prev.length - 2)));
 }
 
 void literal() {
@@ -107,7 +110,7 @@ void literal() {
         case TOKEN_FALSE: emitByte(OP_FALSE); break;
         case TOKEN_NIL: emitByte(OP_NIL); break;
         default:
-            assert(true && "Unrecognized literal presented.");
+            assert(false && "Unrecognized literal presented.");
     }
 }
 

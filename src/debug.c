@@ -2,7 +2,7 @@
 #include "chunk.h"
 #include "value.h"
 #include "debug.h"
-#include "object.h"
+#include "orion_string.h"
 
 int disassembleInstruction(Chunk* chunk, int offset) {
     printf("%04d ", offset);

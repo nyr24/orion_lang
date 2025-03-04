@@ -5,7 +5,7 @@ INCLUDE_DIR = include
 CC = clang
 CFLAGS = -I$(INCLUDE_DIR) -Wall -Wextra -std=c17
 VPATH = $(SRC_DIR) $(INCLUDE_DIR) $(BUILD_DIR)
-SRCS = main.c orion_memory.c debug.c chunk.c value.c vm.c scanner.c compiler.c object.c
+SRCS = main.c orion_memory.c debug.c chunk.c value.c vm.c scanner.c compiler.c object.c orion_string.c
 OBJS = $(SRCS:.c=.o)
 EXE = app
 
